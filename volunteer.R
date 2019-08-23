@@ -1,20 +1,51 @@
 
-startVolunteer <- function(machineId, port){
-  
+
+
+
+startVolunteer <- function(machineId, port) {
   body <- list(port = port)
-  r <- POST(paste(base_url, paste("/machine/{",machineId,"}/startVolunteer", sep = ''), sep = ''),
-            add_headers(Authorization = paste('Bearer',user_session_token) ),
-            body = body,
-            enconde = 'json' )
+  r <-
+    POST(
+      paste(
+        base_url,
+        paste("/machine/{", machineId, "}/startVolunteer", sep = ''),
+        sep = ''
+      ),
+      add_headers(Authorization = paste('Bearer', user_session_token)),
+      body = body,
+      enconde = 'json'
+    )
   
   if (r$status_code == 200) {
     token <- fromJSON(content(r, "text"), flatten = TRUE)
     
-    r <- plumb("volunteerREST.R")  # Where 'plumber.R' is the location of the file shown above
-    r$run(port=port)
     
-    assign("user_session_token",token$token, .GlobalEnv)
+    ## healthz function o keep alive
+    alive <- function() {
+      tryCatch({
+        GET(
+          paste(base_url, "/volunteer/healthz", sep = ''),
+          add_headers(Authorization = paste('Bearer', token)),
+          enconde = 'json'
+        )
+      }, error = function(error_condition) {
+        print(error_condition)
+      })
+    }  # replace with your function
+    tclTaskDelete("alive")
+    tclTaskSchedule(5000, alive(), id = "alive", redo = TRUE)
+    
+    assign("volunteer_session_token", token$token, .GlobalEnv)
     print("Logged in.")
+    
+    r <- plumb("volunteerREST.R")
+    assign("server", r, .GlobalEnv)
+    r$run(port = port)
+    tclTaskDelete("alive")
+    
+    
+    
+    
   }
   
 }
