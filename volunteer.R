@@ -2,6 +2,7 @@
 
 
 
+
 startVolunteer <- function(machineId, port) {
   body <- list(port = port)
   r <-
@@ -22,6 +23,7 @@ startVolunteer <- function(machineId, port) {
     
     ## healthz function o keep alive
     alive <- function() {
+      print('hz')
       tryCatch({
         GET(
           paste(base_url, "/volunteer/healthz", sep = ''),
@@ -40,11 +42,10 @@ startVolunteer <- function(machineId, port) {
     
     r <- plumb("volunteerREST.R")
     assign("server", r, .GlobalEnv)
+    r$registerHook('exit',  function(req){
+      tclTaskDelete("alive")
+    })
     r$run(port = port)
-    tclTaskDelete("alive")
-    
-    
-    
     
   }
   
