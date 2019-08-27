@@ -3,6 +3,8 @@
 
 
 
+
+
 startVolunteer <- function(machineId, port) {
   body <- list(port = port)
   r <-
@@ -34,18 +36,23 @@ startVolunteer <- function(machineId, port) {
         print(error_condition)
       })
     }  # replace with your function
-    tclTaskDelete("alive")
-    tclTaskSchedule(5000, alive(), id = "alive", redo = TRUE)
+    
+    v %<-% {
+      tclTaskSchedule(5000, alive(), id = "alive", redo = TRUE)
+    }
     
     assign("volunteer_session_token", token$token, .GlobalEnv)
     print("Logged in.")
     
     r <- plumb("volunteerREST.R")
     assign("server", r, .GlobalEnv)
-    r$registerHook('exit',  function(req){
+    r$registerHook('exit',  function(req) {
+      print("hz stopped")
       tclTaskDelete("alive")
     })
+    
     r$run(port = port)
+    
     
   }
   
