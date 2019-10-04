@@ -1,3 +1,10 @@
+library(future)
+
+plan(multiprocess)
+
+.partial_results <- new.env()
+
+
 #' @post /addJob
 function(req, res) {
   print(req)
@@ -7,6 +14,18 @@ function(req, res) {
 #' @get /healthz
 function() {
   "ok"
+}
+
+#' @get /result/<id>/<var>
+function(id, var) {
+  
+  process_a %<-% {
+    res <- get(var, envir = get(id, envir = .partial_results))
+    print(res)
+    return(res)
+  }
+ 
+  process_a
 }
 
 #* @post /data/upload/<id>
@@ -47,15 +66,31 @@ function(req, res, id, main) {
     body = list(state = "BUSY")
   )
   
-  print("doaksds")
+  e2 <- new.env(parent = baseenv())
+  assign(id, e2, envir = .partial_results)
+  load(paste(getwd(), '/', id, '.RData', sep = ''), envir = e2)
   
-  
-  v %<-% {
-    print("ok")
-    
+  process_c %<-%  {
     tryCatch({
-      e2 <- new.env(parent = baseenv())
-      load(paste(getwd(), '/', id, '.RData', sep = ''), envir = e2)
+ 
+      f2 <- local( {
+        x <- 1
+        function(v) {
+          
+          if (missing(v))
+            cat("get\n")
+          else {
+            POST(paste(base_url, '/job/', id, '/error', sep = ''),
+                 body = list(fibvals = serialize(v, NULL)))
+            cat("set\n")
+            x <<- v
+          }
+          x
+        }
+      })
+      
+      makeActiveBinding("fibvals", f2, e2)
+      
       source(paste(getwd(), id, main, sep = "/"), local = e2)
       save(
         list = names(e2),

@@ -28,6 +28,8 @@ addJob <-
       enconde = 'json'
     )
     
+    print(fromJSON(content(r, "text")))
+    
     if (r$status_code == 200) {
       job <- fromJSON(content(r, "text"), flatten = TRUE)
       id <- job$id
@@ -116,10 +118,10 @@ listJobs <- function(page = 1) {
 loadJob <- function(id, envir = .GlobalEnv) {
   download.file(
     url = paste(base_url, '/job/', id, '/output', sep = ''),
-    destfile = paste(id, '_out', 'RData', sep = '.'),
+    destfile = paste( getwd() ,'/',id, '_out', '.RData', sep = ''),
     method = 'curl'
   )
   
-  load(paste(id, '_out', 'RData', sep = '.'), envir = envir)
+  load(paste( getwd() ,'/',id, '_out', '.RData', sep = ''), envir = envir)
   
 }

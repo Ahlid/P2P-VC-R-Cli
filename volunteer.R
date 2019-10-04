@@ -5,6 +5,8 @@
 
 
 
+
+
 startVolunteer <- function(machineId, port) {
   body <- list(port = port)
   r <-
@@ -17,10 +19,14 @@ startVolunteer <- function(machineId, port) {
       add_headers(Authorization = paste('Bearer', user_session_token)),
       body = body,
       enconde = 'json'
+      
     )
   
   if (r$status_code == 200) {
     token <- fromJSON(content(r, "text"), flatten = TRUE)
+    
+    
+    
     
     
     ## healthz function o keep alive
@@ -37,11 +43,13 @@ startVolunteer <- function(machineId, port) {
       })
     }  # replace with your function
     
-    v %<-% {
-      tclTaskSchedule(5000, alive(), id = "alive", redo = TRUE)
-    }
+    assign("alive", alive, .GlobalEnv)
+    tclTaskSchedule(5000, alive(), id = "alive", redo = TRUE)
+    
     
     assign("volunteer_session_token", token$token, .GlobalEnv)
+    
+    
     print("Logged in.")
     
     r <- plumb("volunteerREST.R")
@@ -51,7 +59,7 @@ startVolunteer <- function(machineId, port) {
       tclTaskDelete("alive")
     })
     
-    r$run(port = port)
+      r$run(port = port)
     
     
   }
