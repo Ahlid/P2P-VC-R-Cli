@@ -1,19 +1,11 @@
 
-
-
-
-
-
-
-
-
 startVolunteer <- function(machineId, port) {
   body <- list(port = port)
   r <-
     POST(
       paste(
         base_url,
-        paste("/machine/{", machineId, "}/startVolunteer", sep = ''),
+        paste("/machine/", machineId, "/startVolunteer", sep = ''),
         sep = ''
       ),
       add_headers(Authorization = paste('Bearer', user_session_token)),
@@ -24,10 +16,6 @@ startVolunteer <- function(machineId, port) {
   
   if (r$status_code == 200) {
     token <- fromJSON(content(r, "text"), flatten = TRUE)
-    
-    
-    
-    
     
     ## healthz function o keep alive
     alive <- function() {
@@ -45,10 +33,8 @@ startVolunteer <- function(machineId, port) {
     
     assign("alive", alive, .GlobalEnv)
     tclTaskSchedule(5000, alive(), id = "alive", redo = TRUE)
-    
-    
+
     assign("volunteer_session_token", token$token, .GlobalEnv)
-    
     
     print("Logged in.")
     
@@ -60,8 +46,21 @@ startVolunteer <- function(machineId, port) {
     })
     
       r$run(port = port)
-    
-    
+    print("STRUCK")
+
   }
   
+}
+
+setVolunteerState <- function(state){
+  POST(
+    paste(base_url, "/volunteer/setState", sep = ""),
+    add_headers(Authorization = paste("Bearer", volunteer_session_token)),
+    body = list(state = state)
+  )
+}
+
+sendVolunteerComputingError <- function(id ,err){
+  POST(paste(base_url, '/job/', id, '/error', sep = ''),
+    body = list(err = paste("MY_ERROR:  ", err)))
 }

@@ -1,12 +1,18 @@
+install.packages("httr")
+install.packages("jsonlite")
+install.packages("plumber")
+install.packages("future")
+install.packages("tcltk2")
+install.packages("subprocess")
+
 library(httr)
 library(jsonlite)
 library(plumber)
 library(future)
 library(tcltk2)
-
+library(subprocess)
 
 .remotIST <- new.env()
-
 
 source('./config.R')
 source('./auth.R')
