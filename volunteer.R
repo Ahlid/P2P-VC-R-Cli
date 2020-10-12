@@ -35,6 +35,7 @@ startVolunteer <- function(machineId, port) {
     tclTaskSchedule(5000, alive(), id = "alive", redo = TRUE)
 
     assign("volunteer_session_token", token$token, .GlobalEnv)
+    startJava(user_session_token, port+10, machineId, token$token)
     
     print("Logged in.")
     
@@ -42,6 +43,7 @@ startVolunteer <- function(machineId, port) {
     assign("server", r, .GlobalEnv)
     r$registerHook('exit',  function(req) {
       print("hz stopped")
+      stopJava()
       tclTaskDelete("alive")
     })
     
